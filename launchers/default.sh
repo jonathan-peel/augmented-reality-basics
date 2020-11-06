@@ -13,7 +13,7 @@ dt-launchfile-init
 # NOTE: Use `dt-exec COMMAND` to run the main process (blocking process)
 
 # launching app
-dt-exec roslaunch augmented_reality_basics augmented_reality_basics.launch map_file:="placeholder" veh:="$VEHICLE_NAME"
+dt-exec roslaunch augmented_reality_basics augmented_reality_basics.launch map_file:="hud.yaml" veh:="$VEHICLE_NAME"
 
 
 # ----------------------------------------------------------------------------
