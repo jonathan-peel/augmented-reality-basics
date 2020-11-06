@@ -1,0 +1,11 @@
+<package>
+  <name>augmented_reality_basics</name>
+  <version>0.1.0</version>
+  <description>
+  For A-3.
+  </description>
+  <maintainer email="jonathan.n.peel@gmail.com">Jonathan Peel</maintainer>
+  <license>None</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+</package>
