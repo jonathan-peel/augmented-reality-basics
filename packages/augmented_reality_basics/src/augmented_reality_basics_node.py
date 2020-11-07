@@ -17,9 +17,6 @@ class AugmentedRealityBasicsNode(DTROS):
         # initialize the DTROS parent class (initialises the node too)
         super(AugmentedRealityBasicsNode, self).__init__(node_name=node_name, node_type=NodeType.GENERIC)
 
-        # Initialise Augmenter class
-        self.augmenter = Augmenter()
-
         # retrieve variables
         self.vehicle_name = os.environ.get('VEHICLE_NAME', 'default_vehicle')
         self.map_file = rospy.get_param(f'/{self.vehicle_name}/map_file')
@@ -33,6 +30,9 @@ class AugmentedRealityBasicsNode(DTROS):
         # find the calibration parameters
         self.camera_info = self.load_calibration_params()
         self.log(f'Camera info: {self.camera_info}')
+
+        # Initialise Augmenter class
+        self.augmenter = Augmenter()
 
         # construct publisher for the images with the projected yaml file data
         image_pub_topic = f'/{self.vehicle_name}/{node_name}/{self.map_file_basename}/image/compressed'
@@ -55,7 +55,7 @@ class AugmentedRealityBasicsNode(DTROS):
             :obj:`CameraInfo`: a CameraInfo message object
         """
         with open(filename, 'r') as stream:
-            calib_data = yaml.load(stream)
+            calib_data = yaml.load(stream, Loader=yaml.Loader)
         cam_info = CameraInfo()
         cam_info.width = calib_data['image_width']
         cam_info.height = calib_data['image_height']
@@ -101,7 +101,7 @@ class AugmentedRealityBasicsNode(DTROS):
         """
         with open(fname, 'r') as in_file:
             try:
-                yaml_dict = yaml.load(in_file)
+                yaml_dict = yaml.load(in_file, Loader=yaml.Loader)
                 return yaml_dict
             except yaml.YAMLError as exc:
                 self.log("YAML syntax error. File: %s fname. Exc: %s"

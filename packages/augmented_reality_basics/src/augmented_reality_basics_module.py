@@ -12,8 +12,10 @@ class Augmenter():
     def process_image(self):
         pass
 
+
     def ground2pixel(self):
         pass
+
 
     def render_segments(self, image_data, map_dict):
         """ Renders the segments from the map file onto the image.
@@ -68,4 +70,6 @@ class Augmenter():
 
         _color_type, [r, g, b] = defined_colors[color]
         new_image = cv2.line(image, (pt_x[0], pt_y[0]), (pt_x[1], pt_y[1]), (b * 255, g * 255, r * 255), 5)
+
         return new_image
+
