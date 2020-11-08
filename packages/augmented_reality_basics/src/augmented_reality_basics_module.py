@@ -49,6 +49,7 @@ class Augmenter():
             segment_points_coords.append(points[segment_points_names[0]][1]) # eg [0, 0]
             segment_points_coords.append(points[segment_points_names[1]][1])
             # segment_points_coords now eg [[0, 0], [0, 1]]
+            print(f'segment_points_coords: {segment_points_coords}')
             pt_x = [segment_points_coords[0][0], segment_points_coords[1][0]]
             pt_y = [segment_points_coords[0][1], segment_points_coords[1][1]]
             print(f'pt_x: {pt_x}')
@@ -59,15 +60,15 @@ class Augmenter():
             # pt_x = [i * image_width for i in pt_x] # just so you can actually see it!
             # pt_y = [i * image_height for i in pt_y] # just so you can actually see it!
 
-            image_np = self.draw_segment(image_np, pt_x, pt_y, segment_color)
+            image_np = self.draw_segment(image_np, segment_points_coords, segment_color)
 
         return image_np
 
 
-    def draw_segment(self, image, pt_x, pt_y, color):
+    def draw_segment(self, image, points_list, color):
         """ Draws a segment (line) between two points only.
             pt_x is a list of 2 points for each x coord in the line (as for y)
-
+            points_list is a list of the points: [[x1, y1], [x2, y2]]
         """
 
         defined_colors = {
@@ -81,7 +82,7 @@ class Augmenter():
             'black': ['rgb', [0, 0, 0]]}
 
         _color_type, [r, g, b] = defined_colors[color]
-        new_image = cv2.line(image, (pt_x[0], pt_y[0]), (pt_x[1], pt_y[1]), (b * 255, g * 255, r * 255), 5)
+        new_image = cv2.line(image, (tuple(points_list[0])), tuple(points_list[1]), (b * 255, g * 255, r * 255), 5)
 
         return new_image
 
