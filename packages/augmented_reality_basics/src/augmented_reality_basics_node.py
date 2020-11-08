@@ -29,10 +29,12 @@ class AugmentedRealityBasicsNode(DTROS):
 
         # find the calibration parameters
         self.camera_info = self.load_calibration_params()
-        self.log(f'Camera info: {self.camera_info}')
+        rospy.loginfo(f'Camera info: {self.camera_info}')
+        self.homography = self.load_extrinsics()
+        rospy.loginfo(f'Homography: {self.homography}')
 
         # Initialise Augmenter class
-        self.augmenter = Augmenter()
+        self.augmenter = Augmenter(self.homography, self.camera_info)
 
         # construct publisher for the images with the projected yaml file data
         image_pub_topic = f'/{self.vehicle_name}/{node_name}/{self.map_file_basename}/image/compressed'
@@ -93,6 +95,39 @@ class AugmentedRealityBasicsNode(DTROS):
         return current_camera_info
 
 
+    def load_extrinsics(self):
+        """
+        Loads the homography matrix from the extrinsic calibration file.
+        Returns:
+            :obj:`numpy array`: the loaded homography matrix
+        """
+        # load intrinsic calibration
+        cali_file_folder = '/data/config/calibrations/camera_extrinsic/'
+        cali_file = cali_file_folder + rospy.get_namespace().strip("/") + ".yaml"
+
+        # Locate calibration yaml file or use the default otherwise
+        if not os.path.isfile(cali_file):
+            self.log("Can't find calibration file: %s.\n Using default calibration instead."
+                     % cali_file, 'warn')
+            cali_file = (cali_file_folder + "default.yaml")
+
+        # Shutdown if no calibration file not found
+        if not os.path.isfile(cali_file):
+            msg = 'Found no calibration file ... aborting'
+            self.log(msg, 'err')
+            rospy.signal_shutdown(msg)
+
+        try:
+            with open(cali_file,'r') as stream:
+                calib_data = yaml.load(stream, Loader=yaml.Loader)
+        except yaml.YAMLError:
+            msg = 'Error in parsing calibration file %s ... aborting' % cali_file
+            self.log(msg, 'err')
+            rospy.signal_shutdown(msg)
+
+        return calib_data['homography']
+
+
     def read_yaml_file(self,fname):
         """
         Reads the YAML file in the path specified by 'fname'.
@@ -114,8 +149,19 @@ class AugmentedRealityBasicsNode(DTROS):
         """ Once recieving the image, save the data in the correct format
             is it okay to do a lot of computation in the callback?
         """
+        rospy.loginfo('Image recieved, running callback.')
 
-        augmented_image = self.augmenter.render_segments(image_data, self.map_dict)
+
+        # Extract the image from the subscriber into a numpy array
+        np_arr = np.fromstring(image_data.data, np.uint8)
+        # image_np = cv2.imdecode(np_arr, cv2.CV_LOAD_IMAGE_COLOR) # OpenCV < 3
+        image_np = cv2.imdecode(np_arr, cv2.IMREAD_COLOR) # OpenCV >= 3.0:
+
+        # Undistort (rectify) image
+        # undistorted_image = self.augmenter.process_image()
+
+        # Draw map on image
+        augmented_image = self.augmenter.render_segments(image_np, self.map_dict)
 
         # make new CompressedImage to publish
         augmented_image_msg = CompressedImage()
@@ -124,17 +170,8 @@ class AugmentedRealityBasicsNode(DTROS):
         augmented_image_msg.data = np.array(cv2.imencode('.jpg', augmented_image)[1]).tostring()
         # Publish new image
         self.image_pub.publish(augmented_image_msg)
+        rospy.loginfo('Callback completed, publishing image')
 
-
-    def run(self):
-        # publish image 8 times per second
-        rate = rospy.Rate(8) 
-
-        while not rospy.is_shutdown():
-            # publish straight from the callback, like in the example? 
-            # http://wiki.ros.org/rospy_tutorials/Tutorials/WritingImagePublisherSubscriber
-            # self.image_pub.publish(self.augmented_image)
-            rate.sleep()
 
 if __name__ == '__main__':
     # create the node
@@ -142,5 +179,5 @@ if __name__ == '__main__':
     node = AugmentedRealityBasicsNode(node_name='augmented_reality_basics_node')
     rospy.loginfo('Node initalised.')
 
-    # run node
-    node.run()
+    # keep node running, process callbacks sequentially
+    rospy.spin()
