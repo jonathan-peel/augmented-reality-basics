@@ -79,7 +79,9 @@ class AugmentedRealityBasicsNode(DTROS):
         rospy.loginfo(f'Looking for calibration {self.cali_file}')
         if not os.path.isfile(self.cali_file):
             self.logwarn("Calibration not found: %s.\n Using default instead." % self.cali_file)
-            self.cali_file = (self.cali_file_folder + "default.yaml")
+            
+            
+        self.cali_file = (self.cali_file_folder + "default.yaml")
 
         # Shutdown if no calibration file not found
         if not os.path.isfile(self.cali_file):
@@ -111,7 +113,7 @@ class AugmentedRealityBasicsNode(DTROS):
                      % cali_file, 'warn')
             cali_file = (cali_file_folder + "default.yaml")
 
-        # Shutdown if no calibration file not found
+        # Shutdown if calibration file not found
         if not os.path.isfile(cali_file):
             msg = 'Found no calibration file ... aborting'
             self.log(msg, 'err')
@@ -158,10 +160,11 @@ class AugmentedRealityBasicsNode(DTROS):
         image_np = cv2.imdecode(np_arr, cv2.IMREAD_COLOR) # OpenCV >= 3.0:
 
         # Undistort (rectify) image
-        # undistorted_image = self.augmenter.process_image()
+        undistorted_image = self.augmenter.process_image(image_np) # not working
+        # undistorted_image = image_np
 
         # Draw map on image
-        augmented_image = self.augmenter.render_segments(image_np, self.map_dict)
+        augmented_image = self.augmenter.render_segments(undistorted_image, self.map_dict)
 
         # make new CompressedImage to publish
         augmented_image_msg = CompressedImage()

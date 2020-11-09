@@ -3,7 +3,7 @@
 import numpy as np
 import cv2
 import rospy
-# from image_geometry import PinholeCameraModel
+from image_geometry import PinholeCameraModel
 
 class Augmenter():
     def __init__(self, homography, camera_info):
@@ -13,18 +13,39 @@ class Augmenter():
         self.Hinv = np.linalg.inv(self.H)
         rospy.loginfo(f'Inverse homography matrix: {self.Hinv}')
 
-        self.camera_info = camera_info
-        rospy.loginfo('Augmenter class initialised.')
-
         # For the image rectification
-        # self.ci = camera_info
-        # self.pcm = PinholeCameraModel()
-        # self.pcm.fromCameraInfo(self.ci)
+        # my own
+        # self.camera_info = camera_info
+        # self.D = np.array(camera_info.D)
+        # self.K = np.array(camera_info.K).reshape((3, 3))
+        # self.R = np.array(camera_info.R).reshape((3, 3)) # identity
+        # self.P = np.array(camera_info.P).reshape((3, 4))
+        # self.H = camera_info.height
+        # self.W = camera_info.width
+        # print(f'D {self.D}\nK {self.K}\nR {self.R}\nP {self.P}\nH {self.H}\nW {self.W}')
         # self._rectify_inited = False
-        # self._distort_inited = False
 
+        #copied
+        self.ci = camera_info
+        self.pcm = PinholeCameraModel()
+        self.pcm.fromCameraInfo(self.ci)
+        self._rectify_inited = False
+        self._distort_inited = False
+
+
+        rospy.loginfo('Augmenter class initialised.')
         
     def _init_rectify_maps(self):
+        #own
+        # mapx = np.ndarray(shape=(self.H, self.W, 1), dtype='float32')
+        # mapy = np.ndarray(shape=(self.H, self.W, 1), dtype='float32')
+        # mapx, mapy = cv2.initUndistortRectifyMap(self.K, self.D, self.R, 
+        #     self.P, (self.W, self.H), cv2.CV_32FC1, mapx, mapy)
+        # self.mapx = mapx
+        # self.mapy = mapy
+        # self._rectify_inited = True
+
+        #copied
         W = self.pcm.width
         H = self.pcm.height
         mapx = np.ndarray(shape=(H, W, 1), dtype='float32')
@@ -41,6 +62,18 @@ class Augmenter():
         ''' Undistort an image.
             To be more precise, pass interpolation= cv2.INTER_CUBIC
         '''
+        #own
+        # if not self._rectify_inited:
+        #     self._init_rectify_maps()
+        
+        # cv_image_rectified = np.empty_like(cv_image_raw)
+        # res = cv2.remap(cv_image_raw, self.mapx, self.mapy, interpolation,
+                        # cv_image_rectified)
+
+        # newcameramtx, roi=cv2.getOptimalNewCameraMatrix(self.K, self.D,(self.W,self.H),1,(self.W,self.H)) # the problem must be K or D
+        # res = cv2.undistort(cv_image_raw, self.K, self.D, None, self.P)
+
+        #copied
         if not self._rectify_inited:
             self._init_rectify_maps()
         #
@@ -50,7 +83,9 @@ class Augmenter():
         cv_image_rectified = np.empty_like(cv_image_raw)
         res = cv2.remap(cv_image_raw, self.mapx, self.mapy, interpolation,
                         cv_image_rectified)
+
         return res
+        
 
 
     def ground2pixel(self, point):
