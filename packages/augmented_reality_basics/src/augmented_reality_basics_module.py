@@ -14,18 +14,6 @@ class Augmenter():
         rospy.loginfo(f'Inverse homography matrix: {self.Hinv}')
 
         # For the image rectification
-        # my own
-        # self.camera_info = camera_info
-        # self.D = np.array(camera_info.D)
-        # self.K = np.array(camera_info.K).reshape((3, 3))
-        # self.R = np.array(camera_info.R).reshape((3, 3)) # identity
-        # self.P = np.array(camera_info.P).reshape((3, 4))
-        # self.H = camera_info.height
-        # self.W = camera_info.width
-        # print(f'D {self.D}\nK {self.K}\nR {self.R}\nP {self.P}\nH {self.H}\nW {self.W}')
-        # self._rectify_inited = False
-
-        #copied
         self.ci = camera_info
         self.pcm = PinholeCameraModel()
         self.pcm.fromCameraInfo(self.ci)
@@ -36,16 +24,7 @@ class Augmenter():
         rospy.loginfo('Augmenter class initialised.')
         
     def _init_rectify_maps(self):
-        #own
-        # mapx = np.ndarray(shape=(self.H, self.W, 1), dtype='float32')
-        # mapy = np.ndarray(shape=(self.H, self.W, 1), dtype='float32')
-        # mapx, mapy = cv2.initUndistortRectifyMap(self.K, self.D, self.R, 
-        #     self.P, (self.W, self.H), cv2.CV_32FC1, mapx, mapy)
-        # self.mapx = mapx
-        # self.mapy = mapy
-        # self._rectify_inited = True
 
-        #copied
         W = self.pcm.width
         H = self.pcm.height
         mapx = np.ndarray(shape=(H, W, 1), dtype='float32')
@@ -85,7 +64,7 @@ class Augmenter():
                         cv_image_rectified)
 
         return res
-        
+
 
 
     def ground2pixel(self, point):

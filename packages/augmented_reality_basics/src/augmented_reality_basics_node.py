@@ -171,6 +171,7 @@ class AugmentedRealityBasicsNode(DTROS):
         augmented_image_msg.header.stamp = rospy.Time.now()
         augmented_image_msg.format = "jpeg"
         augmented_image_msg.data = np.array(cv2.imencode('.jpg', augmented_image)[1]).tostring()
+        
         # Publish new image
         self.image_pub.publish(augmented_image_msg)
         rospy.loginfo('Callback completed, publishing image')
